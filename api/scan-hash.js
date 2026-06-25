@@ -2,33 +2,38 @@ export const config = {
   runtime: 'edge',
 };
 
+const SECURITY_HEADERS = {
+  'content-type': 'application/json',
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'content-security-policy': "default-src 'none'; sandbox;"
+};
+
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: SECURITY_HEADERS
+  });
+}
+
 export default async function handler(req) {
   // Only accept POST requests
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'content-type': 'application/json' },
-    });
+    return jsonResponse({ error: 'Method not allowed' }, 405);
   }
 
   const apiKey = process.env.VIRUSTOTAL_API_KEY;
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({
-        status: 'unconfigured',
-        message: 'VirusTotal API key not configured in environment variables.',
-      }),
-      { status: 200, headers: { 'content-type': 'application/json' } }
-    );
+    return jsonResponse({
+      status: 'unconfigured',
+      message: 'VirusTotal API key not configured in environment variables.'
+    }, 200);
   }
 
   try {
     const { hash } = await req.json();
     if (!hash || typeof hash !== 'string' || hash.length !== 64) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid or missing SHA-256 hash' }),
-        { status: 400, headers: { 'content-type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'Invalid or missing SHA-256 hash' }, 400);
     }
 
     // Call VirusTotal API
@@ -40,57 +45,41 @@ export default async function handler(req) {
     });
 
     if (response.status === 404) {
-      return new Response(
-        JSON.stringify({
-          status: 'unknown',
-          message: 'File hash not found in the threat database.',
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } }
-      );
+      return jsonResponse({
+        status: 'unknown',
+        message: 'File hash not found in the threat database.'
+      }, 200);
     }
 
     if (!response.ok) {
       const errorText = await response.text();
-      return new Response(
-        JSON.stringify({
-          error: 'VirusTotal API query failed',
-          details: errorText,
-        }),
-        { status: response.status, headers: { 'content-type': 'application/json' } }
-      );
+      return jsonResponse({
+        error: 'VirusTotal API query failed',
+        details: errorText
+      }, response.status);
     }
 
     const payload = await response.json();
     const attributes = payload?.data?.attributes;
 
     if (!attributes) {
-      return new Response(
-        JSON.stringify({ error: 'Unexpected response layout from VirusTotal' }),
-        { status: 502, headers: { 'content-type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'Unexpected response layout from VirusTotal' }, 502);
     }
 
     const stats = attributes.last_analysis_stats || {};
     const reputation = attributes.reputation ?? 0;
     
-    // We calculate a score and list detections
-    return new Response(
-      JSON.stringify({
-        status: 'known',
-        reputation: reputation,
-        stats: {
-          malicious: stats.malicious || 0,
-          suspicious: stats.suspicious || 0,
-          harmless: stats.harmless || 0,
-          undetected: stats.undetected || 0,
-        },
-      }),
-      { status: 200, headers: { 'content-type': 'application/json' } }
-    );
+    return jsonResponse({
+      status: 'known',
+      reputation: reputation,
+      stats: {
+        malicious: stats.malicious || 0,
+        suspicious: stats.suspicious || 0,
+        harmless: stats.harmless || 0,
+        undetected: stats.undetected || 0,
+      }
+    }, 200);
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', message: err.message }),
-      { status: 500, headers: { 'content-type': 'application/json' } }
-    );
+    return jsonResponse({ error: 'Internal server error', message: err.message }, 500);
   }
 }

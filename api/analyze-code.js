@@ -2,33 +2,38 @@ export const config = {
   runtime: 'edge',
 };
 
+const SECURITY_HEADERS = {
+  'content-type': 'application/json',
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'content-security-policy': "default-src 'none'; sandbox;"
+};
+
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: SECURITY_HEADERS
+  });
+}
+
 export default async function handler(req) {
   // Only accept POST requests
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'content-type': 'application/json' },
-    });
+    return jsonResponse({ error: 'Method not allowed' }, 405);
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({
-        status: 'unconfigured',
-        message: 'Gemini API key not configured in environment variables.',
-      }),
-      { status: 200, headers: { 'content-type': 'application/json' } }
-    );
+    return jsonResponse({
+      status: 'unconfigured',
+      message: 'Gemini API key not configured in environment variables.',
+    }, 200);
   }
 
   try {
     const { code, language } = await req.json();
     if (!code || typeof code !== 'string') {
-      return new Response(
-        JSON.stringify({ error: 'Code content must be a non-empty string' }),
-        { status: 400, headers: { 'content-type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'Code content must be a non-empty string' }, 400);
     }
 
     const langName = language || 'code';
@@ -70,23 +75,17 @@ export default async function handler(req) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      return new Response(
-        JSON.stringify({
-          error: 'Gemini API query failed',
-          details: errorText
-        }),
-        { status: response.status, headers: { 'content-type': 'application/json' } }
-      );
+      return jsonResponse({
+        error: 'Gemini API query failed',
+        details: errorText
+      }, response.status);
     }
 
     const payload = await response.json();
     const rawText = payload?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!rawText) {
-      return new Response(
-        JSON.stringify({ error: 'Empty response returned from AI model' }),
-        { status: 502, headers: { 'content-type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'Empty response returned from AI model' }, 502);
     }
 
     // Try parsing the text locally to ensure it is valid JSON
@@ -95,28 +94,19 @@ export default async function handler(req) {
       auditReport = JSON.parse(rawText.trim());
     } catch (parseErr) {
       // If parsing fails, wrap the text or return error
-      return new Response(
-        JSON.stringify({
-          error: 'Failed to parse AI output as JSON',
-          rawOutput: rawText,
-          message: parseErr.message
-        }),
-        { status: 502, headers: { 'content-type': 'application/json' } }
-      );
+      return jsonResponse({
+        error: 'Failed to parse AI output as JSON',
+        rawOutput: rawText,
+        message: parseErr.message
+      }, 502);
     }
 
-    return new Response(
-      JSON.stringify({
-        status: 'success',
-        report: auditReport
-      }),
-      { status: 200, headers: { 'content-type': 'application/json' } }
-    );
+    return jsonResponse({
+      status: 'success',
+      report: auditReport
+    }, 200);
 
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', message: err.message }),
-      { status: 500, headers: { 'content-type': 'application/json' } }
-    );
+    return jsonResponse({ error: 'Internal server error', message: err.message }, 500);
   }
 }
