@@ -1,6 +1,6 @@
-# VenScanner: AI-Readable Web App Summary
+# VenScan: AI-Readable Web App Summary
 
-VenScanner is a 100% browser-based, privacy-first file security, malware, and AI code vulnerability scanner. It features zero-upload local analysis and cloud-assisted API scanning.
+VenScan is a 100% browser-based, privacy-first file security, malware, and AI code vulnerability scanner. It features zero-upload local analysis and cloud-assisted API scanning.
 
 ## Core Architecture
 - **Frontend**: Single Page Application built using native HTML5, CSS3, and JavaScript. 

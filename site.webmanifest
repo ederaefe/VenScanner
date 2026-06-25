@@ -1,6 +1,6 @@
 {
-  "name": "VenScanner",
-  "short_name": "VenScanner",
+  "name": "VenScan",
+  "short_name": "VenScan",
   "description": "Local & Cloud-Assisted Malware and AI Code Vulnerability Scanner",
   "start_url": "/",
   "display": "standalone",

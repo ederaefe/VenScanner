@@ -1,5 +1,5 @@
 {
-  "name": "venscanner",
+  "name": "venscan",
   "version": "1.0.0",
   "description": "Local and cloud-assisted file scanner for malware and code vulnerabilities",
   "main": "app.js",
@@ -15,7 +15,7 @@
     "virustotal",
     "client-side"
   ],
-  "author": "VenScanner Team",
+  "author": "VenScan Team",
   "license": "MIT",
   "devDependencies": {
     "vercel": "^39.0.0"

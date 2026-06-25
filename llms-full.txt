@@ -1,6 +1,6 @@
-# VenScanner: Full Technical & Architecture Documentation
+# VenScan: Full Technical & Architecture Documentation
 
-This document contains the complete context of VenScanner, including setup instructions, scanning pipelines, and API integrations.
+This document contains the complete context of VenScan, including setup instructions, scanning pipelines, and API integrations.
 
 ## 1. Enabling Chrome Built-In AI (`window.ai`)
 To run local LLM-based code audits without server calls, users must enable Gemini Nano in Chrome:
@@ -11,7 +11,7 @@ To run local LLM-based code audits without server calls, users must enable Gemin
 5. Open Developer Console (`F12`) and verify: `await window.ai.assistant.create()` succeeds.
 
 ## 2. Scanning Pipeline Flow
-When a user drags a file into the VenScanner drop zone, the following asynchronous sequence is triggered:
+When a user drags a file into the VenScan drop zone, the following asynchronous sequence is triggered:
 
 ```
 [User Drop File]

@@ -1,5 +1,5 @@
 /**
- * VenScanner - Frontend Abstraction Layer
+ * VenScan - Frontend Abstraction Layer
  * Encapsulates the file security scan and code analysis engines.
  * Optimized for memory safety, modern window.ai interfaces, and PWA animated favicons.
  */
