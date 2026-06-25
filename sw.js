@@ -7,8 +7,9 @@ const ASSETS = [
   '/site.webmanifest'
 ];
 
-// Install Event: cache all static assets
+// Install Event: cache all static assets and skip waiting
 self.addEventListener('install', (e) => {
+  self.skipWaiting(); // Force the waiting service worker to become active immediately
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
@@ -16,18 +17,23 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// Activate Event: clear old caches
+// Activate Event: clear old caches and claim clients
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
+    Promise.all([
+      // Clean up old caches
+      caches.keys().then((keys) => {
+        return Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME) {
+              return caches.delete(key);
+            }
+          })
+        );
+      }),
+      // Force active service worker to take control of open tabs immediately
+      self.clients.claim()
+    ])
   );
 });
 
@@ -35,9 +41,7 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
-      // Return cached asset if found, otherwise perform network fetch
       return cachedResponse || fetch(e.request).catch((err) => {
-        // If offline and request is an API endpoint, return structured JSON fallback
         if (e.request.url.includes('/api/')) {
           return new Response(
             JSON.stringify({ 
