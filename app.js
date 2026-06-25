@@ -1,7 +1,7 @@
 /**
  * VenScan - Frontend Abstraction Layer
- * Encapsulates the file security scan and code analysis engines.
- * Optimized for memory safety, modern window.ai interfaces, and PWA animated favicons.
+ * Encapsulates the file security scan, URL scan, and code analysis engines.
+ * Optimized for local rate limiting, modern window.ai interfaces, and decoupled verdicts.
  */
 
 // ==========================================
@@ -60,11 +60,9 @@ function getFileExtension(filename) {
   if (!filename || typeof filename !== 'string') return '';
   const trimmed = filename.trim();
   
-  // Extract the last path component (basename) to prevent directory manipulation errors
   const parts = trimmed.split('/');
   const basename = parts[parts.length - 1];
   
-  // Handle dotfiles without extensions (e.g. .gitignore)
   if (basename.startsWith('.') && !basename.slice(1).includes('.')) {
     return '';
   }
@@ -108,7 +106,83 @@ function getLanguageFromExtension(filename) {
 }
 
 // ==========================================
-// 2. ANIMATED FAVICON ENGINE
+// 2. RATE LIMITER ENGINE
+// ==========================================
+
+class RateLimiter {
+  static getLimitKey() {
+    return 'venscan_rate_limit_timestamps';
+  }
+
+  static getLimitDetails() {
+    const maxScans = 3;
+    const windowMs = 10 * 60 * 1000; // 10 minutes in milliseconds
+    return { maxScans, windowMs };
+  }
+
+  /**
+   * Checks if the rate limit has been exceeded.
+   * Returns { blocked: false } or { blocked: true, cooldownSeconds: N }
+   */
+  static checkLimit() {
+    const { maxScans, windowMs } = this.getLimitDetails();
+    const key = this.getLimitKey();
+    const now = Date.now();
+
+    let timestamps = [];
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        timestamps = JSON.parse(stored);
+      }
+    } catch (e) {
+      timestamps = [];
+    }
+
+    // Filter out timestamps older than 10 minutes
+    const cutoff = now - windowMs;
+    timestamps = timestamps.filter(t => t > cutoff);
+
+    if (timestamps.length >= maxScans) {
+      const oldest = timestamps[0];
+      const expiry = oldest + windowMs;
+      const cooldownMs = expiry - now;
+      return {
+        blocked: true,
+        cooldownSeconds: Math.ceil(cooldownMs / 1000)
+      };
+    }
+
+    return { blocked: false };
+  }
+
+  /**
+   * Records a new scan timestamp
+   */
+  static recordScan() {
+    const key = this.getLimitKey();
+    const now = Date.now();
+    let timestamps = [];
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        timestamps = JSON.parse(stored);
+      }
+    } catch (e) {
+      timestamps = [];
+    }
+
+    const { windowMs } = this.getLimitDetails();
+    const cutoff = now - windowMs;
+    timestamps = timestamps.filter(t => t > cutoff);
+
+    timestamps.push(now);
+    localStorage.setItem(key, JSON.stringify(timestamps));
+  }
+}
+
+// ==========================================
+// 3. ANIMATED FAVICON ENGINE
 // ==========================================
 
 class FaviconAnimator {
@@ -121,7 +195,6 @@ class FaviconAnimator {
     this.currentFrame = 0;
     this.intervalId = null;
     
-    // Find or create dynamic link element
     this.link = document.getElementById('dynamic-favicon');
     if (!this.link) {
       this.link = document.createElement('link');
@@ -162,7 +235,6 @@ class FaviconAnimator {
     ctx.arc(16, 16, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Update link href
     this.link.href = this.canvas.toDataURL('image/png');
   }
 
@@ -184,7 +256,7 @@ class FaviconAnimator {
 }
 
 // ==========================================
-// 3. FILE SCANNING ENGINE (Abstracted)
+// 4. FILE SCANNING ENGINE (Threat Audit)
 // ==========================================
 
 class FileScannerEngine {
@@ -195,7 +267,12 @@ class FileScannerEngine {
     const { onProgress = () => {}, onComplete = () => {}, onError = () => {} } = callbacks;
 
     try {
-      // Yield to the rendering queue if the file size is large
+      // Check Rate Limiting
+      const limitCheck = RateLimiter.checkLimit();
+      if (limitCheck.blocked) {
+        throw new Error(`Rate limit exceeded. You can scan again in ${limitCheck.cooldownSeconds} seconds.`);
+      }
+
       if (file.size > 10 * 1024 * 1024) { // 10MB
         onProgress('Warning: Large file detected. Hashing may lock the browser thread temporarily...');
         await new Promise(r => requestAnimationFrame(r));
@@ -207,10 +284,11 @@ class FileScannerEngine {
       
       onProgress(`SHA-256 computed: ${hash.substring(0, 16)}...`);
 
+      // Record scan in Rate Limiter
+      RateLimiter.recordScan();
+
       // 1. Perform Memory-Safe EICAR check
       onProgress('Scanning for malware signatures...');
-      
-      // Slice only the first 2048 bytes to mitigate memory allocation spikes
       const sliceSize = Math.min(buffer.byteLength, 2048);
       const sliceBuffer = buffer.slice(0, sliceSize);
       const textContent = new TextDecoder('utf-8').decode(new Uint8Array(sliceBuffer));
@@ -244,16 +322,15 @@ class FileScannerEngine {
       let isSpoofed = false;
       let spoofMessage = '';
 
-      // Define standard magic bytes
       if (headerHex.startsWith('89 50 4E 47 0D 0A 1A 0A')) {
         detectedType = 'png';
       } else if (headerHex.startsWith('FF D8 FF')) {
         detectedType = 'jpg';
-      } else if (headerHex.startsWith('25 50 44 46')) { // %PDF
+      } else if (headerHex.startsWith('25 50 44 46')) {
         detectedType = 'pdf';
-      } else if (headerHex.startsWith('50 4B 03 04')) { // PK zip
+      } else if (headerHex.startsWith('50 4B 03 04')) {
         detectedType = 'zip';
-      } else if (headerHex.startsWith('4D 5A')) { // MZ Windows executable
+      } else if (headerHex.startsWith('4D 5A')) {
         detectedType = 'exe';
       } else if (headerHex.startsWith('7F 45 4C 46')) {
         detectedType = 'elf';
@@ -261,7 +338,6 @@ class FileScannerEngine {
         detectedType = 'gif';
       }
 
-      // Verify extension against detected type
       const imageExtensions = ['png', 'jpg', 'jpeg', 'gif'];
       const archiveExtensions = ['zip', 'docx', 'xlsx', 'pptx', 'jar'];
       
@@ -378,7 +454,101 @@ class FileScannerEngine {
 }
 
 // ==========================================
-// 4. AI CODE AUDITING ENGINE (Abstracted)
+// 5. LINK SCANNING ENGINE (Threat Audit)
+// ==========================================
+
+class URLScannerEngine {
+  /**
+   * Scans a URL for security threats
+   */
+  static async scan(url, callbacks = {}) {
+    const { onProgress = () => {}, onComplete = () => {}, onError = () => {} } = callbacks;
+
+    try {
+      // Check Rate Limiting
+      const limitCheck = RateLimiter.checkLimit();
+      if (limitCheck.blocked) {
+        throw new Error(`Rate limit exceeded. You can scan again in ${limitCheck.cooldownSeconds} seconds.`);
+      }
+
+      onProgress('Validating URL target format...');
+      const cleanUrl = url.trim();
+      
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        throw new Error('Target URL must start with http:// or https://');
+      }
+
+      // Record scan in Rate Limiter
+      RateLimiter.recordScan();
+
+      onProgress('Consulting remote link database...');
+      const res = await fetch('/api/scan-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: cleanUrl })
+      });
+
+      if (!res.ok) {
+        throw new Error(`API returned status ${res.status}`);
+      }
+
+      const data = await res.json();
+      
+      let verdict = 'SAFE';
+      let reputationScore = 0;
+      let vtStats = { malicious: 0, suspicious: 0, harmless: 0, undetected: 0 };
+      const issues = [];
+
+      if (data.status === 'known') {
+        vtStats = data.stats;
+        reputationScore = data.reputation;
+        
+        if (vtStats.malicious > 0) {
+          verdict = 'MALICIOUS';
+          issues.push({
+            title: 'Malicious URL Flagged',
+            description: `${vtStats.malicious} engine(s) on VirusTotal flagged this URL as malicious.`,
+            severity: vtStats.malicious > 3 ? 'CRITICAL' : 'HIGH'
+          });
+        } else if (vtStats.suspicious > 0 || reputationScore < 0) {
+          verdict = 'SUSPICIOUS';
+          issues.push({
+            title: 'Suspicious URL Reputation',
+            description: `This URL has suspicious metrics or a negative reputation score of ${reputationScore}.`,
+            severity: 'MEDIUM'
+          });
+        }
+      } else if (data.status === 'unknown') {
+        verdict = 'SUSPICIOUS';
+        issues.push({
+          title: 'Unrated URL',
+          description: 'This URL is not present in the threat database. Bypassed online checks.',
+          severity: 'LOW'
+        });
+      } else if (data.status === 'unconfigured') {
+        issues.push({
+          title: 'Cloud Scanner Key Missing',
+          description: 'Vercel environment variables do not include a VirusTotal API Key. Remote checks were bypassed.',
+          severity: 'LOW'
+        });
+      }
+
+      onComplete({
+        verdict,
+        url: cleanUrl,
+        reputationScore,
+        issues,
+        vtStats
+      });
+
+    } catch (err) {
+      onError(err);
+    }
+  }
+}
+
+// ==========================================
+// 6. AI CODE AUDITING ENGINE (Quality Audit)
 // ==========================================
 
 class CodeAnalyzerEngine {
@@ -398,7 +568,7 @@ class CodeAnalyzerEngine {
       const code = await readFileAsText(file);
       
       if (!code.trim()) {
-        onComplete([]);
+        onComplete({ verdict: 'SECURE', issues: [], source: 'Static analysis' });
         return;
       }
 
@@ -407,7 +577,8 @@ class CodeAnalyzerEngine {
       try {
         const localAIReport = await this.scanWithLocalAI(code, file.name, onProgress);
         if (localAIReport && Array.isArray(localAIReport)) {
-          onComplete(localAIReport, 'Local AI (Chrome Gemini Nano)');
+          const verdict = this.evaluateIssuesVerdict(localAIReport);
+          onComplete({ verdict, issues: localAIReport, source: 'Local AI (Chrome Gemini Nano)' });
           return;
         }
       } catch (localAIError) {
@@ -419,7 +590,8 @@ class CodeAnalyzerEngine {
       try {
         const cloudAIReport = await this.scanWithCloudAI(code, language);
         if (cloudAIReport && Array.isArray(cloudAIReport)) {
-          onComplete(cloudAIReport, 'Vercel Cloud AI (Gemini API)');
+          const verdict = this.evaluateIssuesVerdict(cloudAIReport);
+          onComplete({ verdict, issues: cloudAIReport, source: 'Vercel Cloud AI (Gemini API)' });
           return;
         }
       } catch (cloudAIError) {
@@ -430,7 +602,9 @@ class CodeAnalyzerEngine {
       onProgress('Running static heuristic vulnerability matcher...');
       const heuristicReport = this.scanWithHeuristics(code, file.name);
       await new Promise(r => setTimeout(r, 600));
-      onComplete(heuristicReport, 'Static Heuristic Parser');
+      
+      const verdict = this.evaluateIssuesVerdict(heuristicReport);
+      onComplete({ verdict, issues: heuristicReport, source: 'Static Heuristic Parser' });
 
     } catch (err) {
       onError(err);
@@ -438,7 +612,20 @@ class CodeAnalyzerEngine {
   }
 
   /**
-   * Tier 1: Chrome window.ai implementation (Up-to-date with window.ai.languageModel specs)
+   * Helper to calculate the Code Audit Verdict based on issue severity
+   */
+  static evaluateIssuesVerdict(issues) {
+    if (issues.length === 0) return 'SECURE';
+    
+    // Check if there are any high/critical issues
+    const hasVulnerable = issues.some(i => i.severity === 'CRITICAL' || i.severity === 'HIGH');
+    if (hasVulnerable) return 'VULNERABLE';
+    
+    return 'WARNING';
+  }
+
+  /**
+   * Tier 1: Chrome window.ai implementation
    */
   static async scanWithLocalAI(code, filename, onProgress) {
     if (typeof window === 'undefined' || !window.ai) {
@@ -450,7 +637,6 @@ class CodeAnalyzerEngine {
     let session;
     const systemPrompt = "Analyze this code for vulnerabilities, secrets, bugs, or injections. You MUST output ONLY a valid JSON array of objects. Do not wrap in markdown code blocks. Each object contains: 'severity' (CRITICAL, HIGH, MEDIUM, LOW), 'line' (integer), 'title' (string), 'description' (string), 'remediation' (string).";
 
-    // 1. Try standard window.ai.languageModel (Chrome 128+)
     if (window.ai.languageModel) {
       const capabilities = await window.ai.languageModel.capabilities();
       if (capabilities.available === 'no') {
@@ -460,13 +646,11 @@ class CodeAnalyzerEngine {
         systemPrompt: systemPrompt
       });
     } 
-    // 2. Try window.ai.assistant (Legacy intermediate standard)
     else if (window.ai.assistant) {
       session = await window.ai.assistant.create({
         systemPrompt: systemPrompt
       });
     } 
-    // 3. Fallback to older text session
     else if (window.ai.createTextSession) {
       session = await window.ai.createTextSession();
     } else {

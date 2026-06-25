@@ -641,6 +641,154 @@ footer a:hover {
   to { transform: rotate(360deg); }
 }
 
+/* Tabs & Input Controls */
+.tabs-header {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.25rem;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: var(--transition-smooth);
+  border-bottom: 2px solid transparent;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  color: var(--accent-cyan);
+  border-bottom-color: var(--accent-cyan);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.url-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+@media (min-width: 576px) {
+  .url-input-container {
+    flex-direction: row;
+  }
+}
+
+.url-input-box {
+  flex: 1;
+  background: #02050b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  transition: var(--transition-smooth);
+}
+
+.url-input-box:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.15);
+}
+
+.scan-btn {
+  background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+  color: var(--bg-dark);
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.scan-btn:hover {
+  box-shadow: 0 0 12px var(--accent-cyan-glow);
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Double Verdict layouts */
+.verdicts-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Technical specifications toggle panel */
+.tech-spec-toggle {
+  background: none;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  color: var(--accent-cyan);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  display: block;
+  margin: 1.5rem auto 0 auto;
+}
+
+.tech-spec-toggle:hover {
+  background: rgba(14, 165, 233, 0.05);
+  border-color: var(--accent-cyan);
+}
+
+.tech-spec-panel {
+  display: none;
+  background: rgba(13, 20, 38, 0.5);
+  border: 1px dashed rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.tech-spec-panel.active {
+  display: block;
+}
+
+.tech-spec-panel h4 {
+  font-size: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+  color: var(--accent-cyan);
+}
+
+.tech-spec-panel h4:first-child {
+  margin-top: 0;
+}
+
+.tech-spec-panel p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
 @keyframes core-pulse {
   from {
     transform: scale(0.95);

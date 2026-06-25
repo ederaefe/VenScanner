@@ -6,7 +6,7 @@
   
   <!-- SEO Meta Tags -->
   <title>Local Client-Side File Antivirus and AI Code Vulnerability Scanner | VenScan</title>
-  <meta name="description" content="Free browser-based file security scanner. Scan any file for malware, spoofs, and AI-powered code vulnerabilities locally. 100% private, zero uploads.">
+  <meta name="description" content="Free browser-based file and link security scanner. Scan files for malware, spoofs, and AI-powered code vulnerabilities locally. 100% private, zero uploads.">
   <meta name="author" content="VenScan Team">
   <meta name="theme-color" content="#0ea5e9">
   
@@ -18,7 +18,7 @@
   <!-- Open Graph -->
   <meta property="og:site_name" content="VenScan">
   <meta property="og:title" content="VenScan - Local Antivirus & AI Code Scanner">
-  <meta property="og:description" content="Scan files for malware and code vulnerabilities 100% locally in your browser. Files never leave your device.">
+  <meta property="og:description" content="Scan files and links for malware and code vulnerabilities 100% locally in your browser. Files never leave your device.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="/og-image.png">
   
@@ -36,7 +36,7 @@
     "operatingSystem": "Web Browser",
     "browserRequirements": "Modern browser with HTML5 File API and Cryptography support. Supports Chrome On-Device AI.",
     "softwareVersion": "1.0.0",
-    "description": "Browser-based file security, malware signature detector, and AI-powered code vulnerability auditor running entirely client-side.",
+    "description": "Browser-based file security, malware signature detector, link scanner, and AI-powered code vulnerability auditor running entirely client-side.",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -47,6 +47,7 @@
       "100% Browser-based file checksumming and header analysis",
       "EICAR malware signature detection",
       "Extension spoofing verification (magic byte headers)",
+      "URL link reputation lookup",
       "Local AI code auditing utilizing Chrome window.ai",
       "Vercel serverless integration for VirusTotal and Gemini API fallbacks",
       "Completely private execution (files never leave device)"
@@ -75,20 +76,34 @@
       <!-- Left Column: Controls & Console -->
       <section class="dashboard-left">
         <div class="panel">
-          <h2 class="panel-title">
-            <svg style="width:1.25rem; height:1.25rem; fill:currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-            File Uploader
-          </h2>
+          <!-- Navigation Tabs -->
+          <div class="tabs-header">
+            <button class="tab-btn active" id="tab-file">File Scanner</button>
+            <button class="tab-btn" id="tab-link">Link Scanner</button>
+          </div>
           
-          <!-- Drop Zone -->
-          <div id="drop-zone" class="drop-zone">
-            <div class="drop-icon">^</div>
-            <div class="drop-text">
-              <h3>Drag & drop any file here</h3>
-              <p>or click to browse your local files</p>
-              <p style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-muted);">Supports all file types (Executables, Archives, Scripts, Images)</p>
+          <!-- File Scanner Tab Content -->
+          <div id="file-scanner-content" class="tab-content active">
+            <div id="drop-zone" class="drop-zone">
+              <div class="drop-icon">^</div>
+              <div class="drop-text">
+                <h3>Drag & drop any file here</h3>
+                <p>or click to browse your local files</p>
+                <p style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-muted);">Supports all file types (Executables, Archives, Scripts, Images)</p>
+              </div>
+              <input type="file" id="file-input">
             </div>
-            <input type="file" id="file-input">
+          </div>
+
+          <!-- Link Scanner Tab Content -->
+          <div id="link-scanner-content" class="tab-content">
+            <div class="url-input-container">
+              <input type="text" id="url-input" placeholder="Enter target URL (http:// or https://)" class="url-input-box">
+              <button id="scan-url-btn" class="scan-btn">Scan Link</button>
+            </div>
+            <p style="font-size: 0.75rem; text-align: center; color: var(--text-muted); margin-top: 0.5rem;">
+              Validates target URL against global databases for malicious behaviors.
+            </p>
           </div>
 
           <!-- Radar Visualizer -->
@@ -101,7 +116,7 @@
 
           <!-- Terminal Console -->
           <div class="console-box" id="console-output">
-            <div class="console-line">[READY] System initialized. Standby for file drag-and-drop...</div>
+            <div class="console-line">[READY] System initialized. Select a scan method above...</div>
           </div>
         </div>
 
@@ -130,35 +145,50 @@
 
           <div id="report-empty-state" style="text-align: center; margin: auto 0; padding: 3rem 1rem; color: var(--text-secondary);">
             <svg style="width:3rem; height:3rem; fill:var(--text-muted); margin-bottom:1rem;" viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v-2H7v-2h7v-2H7V7h10v10h-3z"/></svg>
-            <p>No active report. Upload or drop a file to view detailed static diagnostics and AI code audit alerts.</p>
+            <p>No active report. Run a file or link scan to view detailed static diagnostics and AI code audit alerts.</p>
           </div>
 
           <div id="report-content" style="display: none;">
-            <!-- Verdict Banner -->
-            <div class="report-header" id="report-verdict-banner">
-              <div>
-                <div class="verdict-title">Scanner Verdict</div>
-                <div class="verdict-status" id="verdict-status-text">Safe</div>
+            
+            <!-- Decoupled Verdict Banners -->
+            <div class="verdicts-wrapper">
+              
+              <!-- 1. Threat Verdict -->
+              <div class="report-header" id="report-threat-banner">
+                <div>
+                  <div class="verdict-title">Threat Scanner Verdict</div>
+                  <div class="verdict-status" id="threat-status-text">Safe</div>
+                </div>
+                <div id="threat-badge-icon" style="font-size: 1.5rem; font-weight: 700;">OK</div>
               </div>
-              <div id="verdict-badge-icon" style="font-size: 1.5rem; font-weight: 700;">OK</div>
+              
+              <!-- 2. AI Code Audit Verdict -->
+              <div class="report-header" id="report-code-banner">
+                <div>
+                  <div class="verdict-title">AI Code Audit Verdict</div>
+                  <div class="verdict-status" id="code-status-text">Secure</div>
+                </div>
+                <div id="code-badge-icon" style="font-size: 1.5rem; font-weight: 700;">SECURE</div>
+              </div>
+              
             </div>
 
             <!-- Metadata details -->
             <div class="metadata-grid">
               <div class="metadata-item">
-                <span>File Name</span>
+                <span id="meta-name-label">File Name</span>
                 <strong id="meta-name">-</strong>
               </div>
               <div class="metadata-item">
-                <span>File Size</span>
+                <span id="meta-size-label">File Size</span>
                 <strong id="meta-size">-</strong>
               </div>
               <div class="metadata-item">
-                <span>Detected Format</span>
+                <span id="meta-type-label">Detected Format</span>
                 <strong id="meta-type">-</strong>
               </div>
               <div class="metadata-item">
-                <span>SHA-256 Hash</span>
+                <span id="meta-hash-label">SHA-256 Hash</span>
                 <strong id="meta-hash">-</strong>
               </div>
             </div>
@@ -179,36 +209,52 @@
 
     <!-- Marketing Copy & SEO details -->
     <section class="marketing-section">
-      <h2 class="section-title">Universal Static Analysis & AI Auditing</h2>
-      <p class="section-subtitle">A private, secure alternative to cloud-upload virus scanners. Run static heuristics and AI code assessments directly on your device.</p>
+      <h2 class="section-title">Vulnerability Scanning and Threat Detection in Plain English</h2>
+      <p class="section-subtitle">A private, secure alternative to cloud-upload virus scanners. Run static checks and AI code assessments directly on your device.</p>
       
-      <!-- Feature highlights -->
+      <!-- Feature highlights in Simple Terms (No analogies) -->
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-card-icon">
             <svg style="width:2rem; height:2rem; fill:var(--accent-cyan)" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
           </div>
-          <h3>Local Privacy First</h3>
-          <p>Files are read into browser memory via HTML5 APIs. No document bytes are ever uploaded to any cloud server, preserving intellectual property.</p>
+          <h3>Local File Inspection</h3>
+          <p>We read files directly in the browser. The scanner evaluates content locally on your computer. No file data is sent to external servers, protecting your privacy.</p>
         </div>
         <div class="feature-card">
           <div class="feature-card-icon">
             <svg style="width:2rem; height:2rem; fill:var(--accent-cyan)" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
           </div>
-          <h3>Extension Spoof Checks</h3>
-          <p>Bypass trick extensions. The engine inspects magic header bytes to verify if binary executables (.exe) or scripts are masking as images or docs.</p>
+          <h3>File Format Verification</h3>
+          <p>We inspect the internal headers of files. The scanner checks if a program or script is hiding behind a safe extension like an image or text document.</p>
         </div>
         <div class="feature-card">
           <div class="feature-card-icon">
             <svg style="width:2rem; height:2rem; fill:var(--accent-cyan)" viewBox="0 0 24 24"><path d="M19 8h-2v3h2V8zm-2 5h-2v2h2v-2zm2-9h-4v2h4V4zm-6 0H9v2h4V4zm-4 4H7v3h2V8zm0 5H7v2h2v-2zM9 18h6v-2H9v2zm12-9c0-1.1-.9-2-2-2h-1V5c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h1v2c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2h1c1.1 0 2-.9 2-2V9zM18 17H6v-8h12v8z"/></svg>
           </div>
-          <h3>Hybrid AI Auditing</h3>
-          <p>Scan code for vulnerabilities using Chrome's local Gemini Nano, cloud API connections, or client-side static heuristic rule-matching.</p>
+          <h3>AI Code Security Auditing</h3>
+          <p>We scan script files to find bugs and flaws. The scanner analyzes code to find security errors that could allow injections or leaks.</p>
         </div>
       </div>
 
+      <!-- Expandable Technical Specifications -->
+      <button class="tech-spec-toggle" id="tech-toggle-btn">View Technical Specifications</button>
+      <div class="tech-spec-panel" id="tech-spec-container">
+        <h4>1. Cryptographic SHA-256 Hashing</h4>
+        <p>Generates unique file signatures locally in the browser utilizing the Web Crypto subtle digest standard. Large files yield thread execution back to the browser layout queue to prevent frame-blocking.</p>
+        
+        <h4>2. Binary Slicing Analysis</h4>
+        <p>Checks headers (magic bytes) and standard signatures (like EICAR strings) by slicing only the first 2KB of the file. This keeps memory allocation near zero, preventing browser crash thresholds.</p>
+        
+        <h4>3. Multi-Tiered AI Code Auditing</h4>
+        <p>Coordinates prompts targeting Chrome's window.ai.languageModel, falling back to secure Vercel Edge Serverless functions (Gemini 2.5 Flash API) and local AST-pattern regex matching.</p>
+        
+        <h4>4. Secure Header Edge Sandbox</h4>
+        <p>Vercel Edge functions protect API execution by returning strict response headers (X-Content-Type-Options: nosniff, X-Frame-Options: DENY, and sandbox Content-Security-Policy rules).</p>
+      </div>
+
       <!-- Comparison Table -->
-      <h2 class="section-title" style="font-size: 1.75rem; margin-bottom: 2rem;">How VenScan Compares</h2>
+      <h2 class="section-title" style="font-size: 1.75rem; margin-top: 4rem; margin-bottom: 2rem;">How VenScan Compares</h2>
       <div class="table-container">
         <table>
           <thead>
@@ -289,8 +335,17 @@
       const favicon = new FaviconAnimator();
       favicon.start();
 
+      // UI Element Bindings
+      const tabFile = document.getElementById('tab-file');
+      const tabLink = document.getElementById('tab-link');
+      const fileScannerContent = document.getElementById('file-scanner-content');
+      const linkScannerContent = document.getElementById('link-scanner-content');
+      
       const dropZone = document.getElementById('drop-zone');
       const fileInput = document.getElementById('file-input');
+      const urlInput = document.getElementById('url-input');
+      const scanUrlBtn = document.getElementById('scan-url-btn');
+
       const consoleOutput = document.getElementById('console-output');
       const radarArea = document.getElementById('radar-area');
       const radarStatus = document.getElementById('radar-status');
@@ -299,15 +354,32 @@
       
       const reportEmptyState = document.getElementById('report-empty-state');
       const reportContent = document.getElementById('report-content');
-      const reportVerdictBanner = document.getElementById('report-verdict-banner');
-      const verdictStatusText = document.getElementById('verdict-status-text');
-      const verdictBadgeIcon = document.getElementById('verdict-badge-icon');
+      const reportIssuesList = document.getElementById('report-issues-list');
+      const auditSourceIndicator = document.getElementById('audit-source-indicator');
+      
+      // Split Verdict UI bindings
+      const reportThreatBanner = document.getElementById('report-threat-banner');
+      const threatStatusText = document.getElementById('threat-status-text');
+      const threatBadgeIcon = document.getElementById('threat-badge-icon');
+      
+      const reportCodeBanner = document.getElementById('report-code-banner');
+      const codeStatusText = document.getElementById('code-status-text');
+      const codeBadgeIcon = document.getElementById('code-badge-icon');
+
+      // Metadata labels & strong bindings
+      const metaNameLabel = document.getElementById('meta-name-label');
+      const metaSizeLabel = document.getElementById('meta-size-label');
+      const metaTypeLabel = document.getElementById('meta-type-label');
+      const metaHashLabel = document.getElementById('meta-hash-label');
+      
       const metaName = document.getElementById('meta-name');
       const metaSize = document.getElementById('meta-size');
       const metaType = document.getElementById('meta-type');
       const metaHash = document.getElementById('meta-hash');
-      const reportIssuesList = document.getElementById('report-issues-list');
-      const auditSourceIndicator = document.getElementById('audit-source-indicator');
+
+      // Technical Spec accordion bindings
+      const techToggleBtn = document.getElementById('tech-toggle-btn');
+      const techSpecContainer = document.getElementById('tech-spec-container');
 
       // 1. Detect Chrome Local AI Support
       const localAIAvailable = !!(window.ai && (window.ai.assistant || window.ai.languageModel || window.ai.createTextSession));
@@ -334,7 +406,24 @@
         consoleOutput.scrollTop = consoleOutput.scrollHeight;
       }
 
-      // 3. Setup Drag and Drop Event Listeners
+      // 3. Tab switching mechanisms
+      tabFile.addEventListener('click', () => {
+        tabFile.classList.add('active');
+        tabLink.classList.remove('active');
+        fileScannerContent.classList.add('active');
+        linkScannerContent.classList.remove('active');
+        logToConsole('Switched to File Scanner mode.', 'running');
+      });
+
+      tabLink.addEventListener('click', () => {
+        tabLink.classList.add('active');
+        tabFile.classList.remove('active');
+        linkScannerContent.classList.add('active');
+        fileScannerContent.classList.remove('active');
+        logToConsole('Switched to Link Scanner mode.', 'running');
+      });
+
+      // 4. File Scanner DOM Event Listeners
       dropZone.addEventListener('click', () => fileInput.click());
       
       dropZone.addEventListener('dragover', (e) => {
@@ -360,69 +449,111 @@
         }
       });
 
-      // 4. File Processing Pipeline Coordinator
+      // 5. Link Scanner DOM Event Listeners
+      scanUrlBtn.addEventListener('click', () => {
+        const targetUrl = urlInput.value.trim();
+        if (targetUrl) {
+          processLink(targetUrl);
+        } else {
+          logToConsole('Error: Please enter a target URL first.', 'error');
+        }
+      });
+
+      urlInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          const targetUrl = urlInput.value.trim();
+          if (targetUrl) {
+            processLink(targetUrl);
+          }
+        }
+      });
+
+      // 6. Expandable Specs Accordion Listener
+      techToggleBtn.addEventListener('click', () => {
+        techSpecContainer.classList.toggle('active');
+        if (techSpecContainer.classList.contains('active')) {
+          techToggleBtn.innerText = 'Hide Technical Specifications';
+        } else {
+          techToggleBtn.innerText = 'View Technical Specifications';
+        }
+      });
+
+      // 7. File scan executor
       async function processFile(file) {
-        // Reset UI report
+        // Reset report panel states
         reportEmptyState.style.display = 'none';
         reportContent.style.display = 'none';
         reportIssuesList.innerHTML = '';
         auditSourceIndicator.innerText = '';
         
-        // Show scanning state
+        // Show active scanning state
         radarArea.classList.add('scanning');
         radarStatus.innerText = 'o';
         consoleOutput.innerHTML = '';
-        logToConsole(`File loaded: "${file.name}" (${formatBytes(file.size)})`, 'success');
+        logToConsole(`File scan requested: "${file.name}"`, 'running');
 
-        // Execute file scanner engine
+        // Check Local Rate Limits
+        const limitCheck = RateLimiter.checkLimit();
+        if (limitCheck.blocked) {
+          logToConsole(`Rate limit blocked: 3 scans per 10 minutes limit reached. Wait ${limitCheck.cooldownSeconds}s.`, 'error');
+          radarArea.classList.remove('scanning');
+          radarStatus.innerText = 'x';
+          reportEmptyState.style.display = 'block';
+          return;
+        }
+
+        // Execute scanner engine
         await FileScannerEngine.scan(file, {
           onProgress: (statusText) => {
             logToConsole(statusText, 'running');
           },
           onComplete: async (report) => {
-            logToConsole('Local scan completed. Analyzing findings...', 'success');
+            logToConsole('Threat scan completed. Inspecting format details...', 'success');
             
-            // Check if file is a code file for AI vulnerability auditing
             const language = getLanguageFromExtension(file.name);
-            let aiIssues = [];
+            let codeVerdict = 'NOT_APPLICABLE';
+            let codeIssues = [];
             let analysisSource = '';
 
             if (language) {
-              logToConsole(`Code file recognized (${language}). Spawning AI Vulnerability analysis...`, 'warning');
+              logToConsole(`Code layout detected (${language}). Requesting code analysis...`, 'warning');
               
               await CodeAnalyzerEngine.analyze(file, {
                 onProgress: (aiStatus) => {
                   logToConsole(aiStatus, 'running');
                 },
-                onComplete: (vulnerabilities, source) => {
-                  aiIssues = vulnerabilities;
-                  analysisSource = source;
-                  logToConsole(`AI Code audit completed using: ${source}`, 'success');
+                onComplete: (codeReport) => {
+                  codeVerdict = codeReport.verdict;
+                  codeIssues = codeReport.issues;
+                  analysisSource = codeReport.source;
+                  logToConsole(`AI Code audit resolved with status: ${codeVerdict}`, 'success');
                 },
                 onError: (aiErr) => {
-                  logToConsole(`AI Scan Failed: ${aiErr.message}. Skipping AI metrics.`, 'error');
+                  logToConsole(`AI Scan Failed: ${aiErr.message}. Bypassing AI metrics.`, 'error');
+                  codeVerdict = 'WARNING';
+                  codeIssues = [{
+                    title: 'AI Code Scan Interrupted',
+                    description: `Unable to complete AI audit: ${aiErr.message}`,
+                    severity: 'LOW'
+                  }];
                 }
               });
             } else {
-              logToConsole('Static formats matched. Skipping AI code auditing.', 'running');
+              logToConsole('Format is not a script. Skipping code quality audit.', 'running');
             }
 
-            // Combine issues
-            const combinedIssues = [...report.issues, ...aiIssues];
-            
-            // Re-evaluate final verdict based on all combined issues
-            let finalVerdict = report.verdict;
-            const hasCriticalOrHigh = combinedIssues.some(iss => iss.severity === 'CRITICAL' || iss.severity === 'HIGH');
-            const hasMedium = combinedIssues.some(iss => iss.severity === 'MEDIUM');
-
-            if (hasCriticalOrHigh) {
-              finalVerdict = 'MALICIOUS';
-            } else if (hasMedium && finalVerdict === 'SAFE') {
-              finalVerdict = 'SUSPICIOUS';
-            }
-
-            // Render Report Card
-            renderReportCard(file, report.hash, finalVerdict, combinedIssues, report.reputationScore, analysisSource);
+            // Render combined report
+            renderReportCard({
+              mode: 'file',
+              name: file.name,
+              size: formatBytes(file.size),
+              type: report.fileType,
+              hash: report.hash,
+              threatVerdict: report.verdict,
+              codeVerdict: codeVerdict,
+              issues: [...report.issues, ...codeIssues],
+              source: analysisSource
+            });
           },
           onError: (err) => {
             logToConsole(`Fatal Scan Error: ${err.message}`, 'error');
@@ -433,59 +564,149 @@
         });
       }
 
-      // 5. Render Final Diagnostic Report Card
-      function renderReportCard(file, hash, verdict, issues, reputation, source) {
+      // 8. Link scan executor
+      async function processLink(url) {
+        // Reset report panel states
+        reportEmptyState.style.display = 'none';
+        reportContent.style.display = 'none';
+        reportIssuesList.innerHTML = '';
+        auditSourceIndicator.innerText = '';
+        
+        // Show active scanning state
+        radarArea.classList.add('scanning');
+        radarStatus.innerText = 'o';
+        consoleOutput.innerHTML = '';
+        logToConsole(`Link scan requested: "${url}"`, 'running');
+
+        // Check Local Rate Limits
+        const limitCheck = RateLimiter.checkLimit();
+        if (limitCheck.blocked) {
+          logToConsole(`Rate limit blocked: 3 scans per 10 minutes limit reached. Wait ${limitCheck.cooldownSeconds}s.`, 'error');
+          radarArea.classList.remove('scanning');
+          radarStatus.innerText = 'x';
+          reportEmptyState.style.display = 'block';
+          return;
+        }
+
+        // Execute URL scanner engine
+        await URLScannerEngine.scan(url, {
+          onProgress: (statusText) => {
+            logToConsole(statusText, 'running');
+          },
+          onComplete: (report) => {
+            logToConsole('Link scan completed successfully.', 'success');
+            
+            renderReportCard({
+              mode: 'link',
+              name: report.url,
+              size: 'Not Applicable',
+              type: 'Web URL Address',
+              hash: 'Not Applicable',
+              threatVerdict: report.verdict,
+              codeVerdict: 'NOT_APPLICABLE',
+              issues: report.issues,
+              source: ''
+            });
+          },
+          onError: (err) => {
+            logToConsole(`Fatal URL Scan Error: ${err.message}`, 'error');
+            radarArea.classList.remove('scanning');
+            radarStatus.innerText = 'x';
+            reportEmptyState.style.display = 'block';
+          }
+        });
+      }
+
+      // 9. Dual-Verdict Report Card Renderer
+      function renderReportCard(report) {
         // Stop scanning visuals
         radarArea.classList.remove('scanning');
         
-        if (verdict === 'SAFE') {
-          radarStatus.innerText = 'o';
-          radarStatus.style.color = 'var(--verdict-safe)';
-          radarStatus.style.borderColor = 'var(--verdict-safe)';
-          
-          reportVerdictBanner.className = 'report-header SAFE';
-          verdictStatusText.innerText = 'SAFE';
-          verdictBadgeIcon.innerText = 'OK';
-          verdictBadgeIcon.style.color = 'var(--verdict-safe)';
-        } else if (verdict === 'SUSPICIOUS') {
-          radarStatus.innerText = '!';
-          radarStatus.style.color = 'var(--verdict-warn)';
-          radarStatus.style.borderColor = 'var(--verdict-warn)';
-          
-          reportVerdictBanner.className = 'report-header SUSPICIOUS';
-          verdictStatusText.innerText = 'SUSPICIOUS';
-          verdictBadgeIcon.innerText = 'WARN';
-          verdictBadgeIcon.style.color = 'var(--verdict-warn)';
+        // Configure Metadata labels dynamically
+        if (report.mode === 'link') {
+          metaNameLabel.innerText = 'Target Link';
+          metaSizeLabel.innerText = 'Scan Context';
+          metaTypeLabel.innerText = 'Resource Type';
+          metaHashLabel.innerText = 'Lookup Status';
         } else {
+          metaNameLabel.innerText = 'File Name';
+          metaSizeLabel.innerText = 'File Size';
+          metaTypeLabel.innerText = 'Detected Format';
+          metaHashLabel.innerText = 'SHA-256 Hash';
+        }
+
+        // Output metadata parameters
+        metaName.innerText = report.name;
+        metaSize.innerText = report.size;
+        metaType.innerText = report.type;
+        metaHash.innerText = report.hash;
+
+        // Render Threat Banner
+        if (report.threatVerdict === 'SAFE') {
+          reportThreatBanner.className = 'report-header SAFE';
+          threatStatusText.innerText = 'SAFE';
+          threatBadgeIcon.innerText = 'OK';
+          threatBadgeIcon.style.color = 'var(--verdict-safe)';
+        } else if (report.threatVerdict === 'SUSPICIOUS') {
+          reportThreatBanner.className = 'report-header SUSPICIOUS';
+          threatStatusText.innerText = 'SUSPICIOUS';
+          threatBadgeIcon.innerText = 'WARN';
+          threatBadgeIcon.style.color = 'var(--verdict-warn)';
+        } else {
+          reportThreatBanner.className = 'report-header MALICIOUS';
+          threatStatusText.innerText = 'MALICIOUS';
+          threatBadgeIcon.innerText = 'ALERT';
+          threatBadgeIcon.style.color = 'var(--verdict-danger)';
+        }
+
+        // Render AI Code Audit Banner
+        if (report.codeVerdict === 'NOT_APPLICABLE') {
+          reportCodeBanner.style.display = 'none';
+        } else {
+          reportCodeBanner.style.display = 'flex';
+          
+          if (report.codeVerdict === 'SECURE') {
+            reportCodeBanner.className = 'report-header SAFE';
+            codeStatusText.innerText = 'SECURE';
+            codeBadgeIcon.innerText = 'PASS';
+            codeBadgeIcon.style.color = 'var(--verdict-safe)';
+          } else if (report.codeVerdict === 'WARNING') {
+            reportCodeBanner.className = 'report-header SUSPICIOUS';
+            codeStatusText.innerText = 'WARNING';
+            codeBadgeIcon.innerText = 'WARN';
+            codeBadgeIcon.style.color = 'var(--verdict-warn)';
+          } else {
+            reportCodeBanner.className = 'report-header MALICIOUS';
+            codeStatusText.innerText = 'VULNERABLE';
+            codeBadgeIcon.innerText = 'FAIL';
+            codeBadgeIcon.style.color = 'var(--verdict-danger)';
+          }
+        }
+
+        // Stop radar on overall worst state
+        if (report.threatVerdict === 'MALICIOUS' || report.codeVerdict === 'VULNERABLE') {
           radarStatus.innerText = 'x';
           radarStatus.style.color = 'var(--verdict-danger)';
           radarStatus.style.borderColor = 'var(--verdict-danger)';
-          
-          reportVerdictBanner.className = 'report-header MALICIOUS';
-          verdictStatusText.innerText = 'MALICIOUS';
-          verdictBadgeIcon.innerText = 'ALERT';
-          verdictBadgeIcon.style.color = 'var(--verdict-danger)';
+        } else if (report.threatVerdict === 'SUSPICIOUS' || report.codeVerdict === 'WARNING') {
+          radarStatus.innerText = '!';
+          radarStatus.style.color = 'var(--verdict-warn)';
+          radarStatus.style.borderColor = 'var(--verdict-warn)';
+        } else {
+          radarStatus.innerText = 'o';
+          radarStatus.style.color = 'var(--verdict-safe)';
+          radarStatus.style.borderColor = 'var(--verdict-safe)';
         }
 
-        // Render meta
-        metaName.innerText = file.name;
-        metaSize.innerText = formatBytes(file.size);
-        
-        const codeLang = getLanguageFromExtension(file.name);
-        const ext = getFileExtension(file.name);
-        metaType.innerText = codeLang ? `${codeLang} Script` : `.${ext.toUpperCase()} File`;
-        
-        metaHash.innerText = hash;
-
-        // Render Issue cards
-        if (issues.length === 0) {
+        // Render Issue List cards
+        if (report.issues.length === 0) {
           reportIssuesList.innerHTML = `
             <div style="text-align: center; padding: 1.5rem; color: var(--verdict-safe); font-size: 0.9rem;">
-              No threats or code vulnerabilities detected. File appears safe to execute.
+              No threats or code vulnerabilities detected. Resource appears safe.
             </div>
           `;
         } else {
-          issues.forEach(issue => {
+          report.issues.forEach(issue => {
             const card = document.createElement('div');
             card.className = `issue-card ${issue.severity}`;
             
@@ -517,13 +738,13 @@
           });
         }
 
-        if (source) {
-          auditSourceIndicator.innerText = `Code audited by: ${source}`;
+        if (report.source) {
+          auditSourceIndicator.innerText = `Code audited by: ${report.source}`;
         }
 
         // Show report panel
         reportContent.style.display = 'block';
-        logToConsole(`Report rendered successfully. Final Verdict: ${verdict}`, 'success');
+        logToConsole(`Report rendered successfully. Threat verdict: ${report.threatVerdict}. Code verdict: ${report.codeVerdict}`, 'success');
       }
     });
 
