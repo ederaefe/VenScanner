@@ -1,0 +1,63 @@
+# VenScanner: Full Technical & Architecture Documentation
+
+This document contains the complete context of VenScanner, including setup instructions, scanning pipelines, and API integrations.
+
+## 1. Enabling Chrome Built-In AI (`window.ai`)
+To run local LLM-based code audits without server calls, users must enable Gemini Nano in Chrome:
+1. Open Google Chrome (version 127 or higher recommended).
+2. Navigate to `chrome://flags/#optimization-guide-on-device-model` and set it to **Enabled Bypass list** or **Enabled**.
+3. Navigate to `chrome://flags/#prompt-api-for-gemini-nano` and set it to **Enabled**.
+4. Relaunch Chrome.
+5. Open Developer Console (`F12`) and verify: `await window.ai.assistant.create()` succeeds.
+
+## 2. Scanning Pipeline Flow
+When a user drags a file into the VenScanner drop zone, the following asynchronous sequence is triggered:
+
+```
+[User Drop File]
+       │
+       ▼
+[File Size Check] ─── (Abort if empty or exceeds memory capacity)
+       │
+       ▼
+[Start Hash Worker] ─── (Computes SHA-256 in chunked blocks)
+       │
+       ▼
+[Extract Magic Bytes] ─── (Validates PNG, JPG, PDF, ZIP, EXE headers)
+       │
+       ├────────────────────────────────────────┐
+       ▼                                        ▼
+[Magic vs Ext Check]                     [EICAR String scan]
+(spoofing check)                         (standard virus check)
+       │                                        │
+       └───────────────────┬────────────────────┘
+                           ▼
+                 [Is it a Code File?]
+                 Yes ───► Run Code Analysis Engine
+                 No  ───► Skip Code Audits
+                           │
+                           ▼
+                  [Call /api/scan-hash]
+                  (Checks SHA-256 reputation on VirusTotal)
+                           │
+                           ▼
+                    [Output Report]
+```
+
+## 3. Code Analyzer Abstraction
+The `CodeAnalyzerEngine` executes code audits in three tiers:
+1. **Tier 1: On-Device AI (`window.ai`)**
+   Spawns a local session using Gemini Nano. Evaluates syntax for potential bugs, resource leaks, and logic flaws.
+2. **Tier 2: Cloud AI (`/api/analyze-code`)**
+   If local AI is unavailable, falls back to our Vercel Serverless API. This endpoint sends the code to Google's cloud-based Gemini API using the host's `GEMINI_API_KEY`.
+3. **Tier 3: Static Heuristics Engine**
+   If both local and cloud AI are unavailable, runs regex-based pattern matching:
+   - **Buffer Overflows**: Highlights C/C++ memory functions like `strcpy`, `gets`.
+   - **Injection Flaws**: Highlights dynamic SQL concatenations and terminal executions.
+   - **XSS**: Highlights unescaped DOM insertions like `.innerHTML`.
+   - **Secrets Leakage**: Flags strings matching typical API key formats (AWS, Stripe, etc.) or hardcoded passwords.
+
+## 4. Backend Environment Variables
+- `VIRUSTOTAL_API_KEY`: Required by `/api/scan-hash` to contact VirusTotal.
+- `GEMINI_API_KEY`: Required by `/api/analyze-code` to connect to the Gemini Developer API.
+These are securely configured in Vercel's Dashboard and are never exposed to the frontend browser.

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Meta Tags -->
+  <title>Local Client-Side File Antivirus and AI Code Vulnerability Scanner | VenScanner</title>
+  <meta name="description" content="Free browser-based file security scanner. Scan any file for malware, spoofs, and AI-powered code vulnerabilities locally. 100% private, zero uploads.">
+  <meta name="author" content="VenScanner Team">
+  <meta name="theme-color" content="#0ea5e9">
+  
+  <!-- PWA Manifest & alternate AI descriptions -->
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/png" href="/favicon.png" sizes="512x512">
+  <link rel="alternate" type="text/markdown" href="/llms.txt" title="AI Site Summary">
+  <link rel="alternate" type="text/markdown" href="/llms-full.txt" title="Full AI Developer Docs">
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="VenScanner">
+  <meta property="og:title" content="VenScanner - Local Antivirus & AI Code Scanner">
+  <meta property="og:description" content="Scan files for malware and code vulnerabilities 100% locally in your browser. Files never leave your device.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/og-image.png">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="index.css">
+
+  <!-- JSON-LD Global Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "@id": "https://venscanner.com/#software",
+    "name": "VenScanner",
+    "applicationCategory": "SecurityApplication",
+    "operatingSystem": "Web Browser",
+    "browserRequirements": "Modern browser with HTML5 File API and Cryptography support. Supports Chrome On-Device AI.",
+    "softwareVersion": "1.0.0",
+    "description": "Browser-based file security, malware signature detector, and AI-powered code vulnerability auditor running entirely client-side.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    },
+    "featureList": [
+      "100% Browser-based file checksumming and header analysis",
+      "EICAR malware signature detection",
+      "Extension spoofing verification (magic byte headers)",
+      "Local AI code auditing utilizing Chrome window.ai",
+      "Vercel serverless integration for VirusTotal and Gemini API fallbacks",
+      "Completely private execution (files never leave device)"
+    ]
+  }
+  </script>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <a href="/" class="logo">
+        <div class="logo-icon">V</div>
+        <span>VenScanner</span>
+      </a>
+      <div id="ai-status-badge" class="chrome-ai-banner" style="margin-top: 0; padding: 0.4rem 0.8rem; border-radius: 20px;">
+        <span class="chrome-ai-banner-icon">●</span>
+        <span id="ai-status-text" style="font-weight: 600;">Checking Local AI...</span>
+      </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="dashboard-grid">
+      
+      <!-- Left Column: Controls & Console -->
+      <section class="dashboard-left">
+        <div class="panel">
+          <h2 class="panel-title">
+            <svg style="width:1.25rem; height:1.25rem; fill:currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+            File Uploader
+          </h2>
+          
+          <!-- Drop Zone -->
+          <div id="drop-zone" class="drop-zone">
+            <div class="drop-icon">⇪</div>
+            <div class="drop-text">
+              <h3>Drag & drop any file here</h3>
+              <p>or click to browse your local files</p>
+              <p style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-muted);">Supports all file types (Executables, Archives, Scripts, Images)</p>
+            </div>
+            <input type="file" id="file-input">
+          </div>
+
+          <!-- Radar Visualizer -->
+          <div class="radar-container" id="radar-area">
+            <div class="radar-circle">
+              <div class="radar-scan-line"></div>
+              <div class="radar-core" id="radar-status">⚲</div>
+            </div>
+          </div>
+
+          <!-- Terminal Console -->
+          <div class="console-box" id="console-output">
+            <div class="console-line">[READY] System initialized. Standby for file drag-and-drop...</div>
+          </div>
+        </div>
+
+        <!-- Local AI Instructions -->
+        <div class="chrome-ai-banner" id="chrome-ai-details">
+          <div class="chrome-ai-banner-icon">ℹ</div>
+          <div class="chrome-ai-banner-text">
+            <p><strong>Optimize Code Scanning with Chrome On-Device AI:</strong></p>
+            <p>This application can use local machine-learning (Gemini Nano) to audit code files for vulnerabilities with zero network latency. To enable it:</p>
+            <ol>
+              <li>Go to <code>chrome://flags/#optimization-guide-on-device-model</code> -> set to <strong>Enabled</strong>.</li>
+              <li>Go to <code>chrome://flags/#prompt-api-for-gemini-nano</code> -> set to <strong>Enabled</strong>.</li>
+              <li>Relaunch Chrome and refresh this page.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Scan Verdict & Report Card -->
+      <section class="dashboard-right">
+        <div class="panel" style="height: 100%; display: flex; flex-direction: column;">
+          <h2 class="panel-title">
+            <svg style="width:1.25rem; height:1.25rem; fill:currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            Diagnostic Scan Report
+          </h2>
+
+          <div id="report-empty-state" style="text-align: center; margin: auto 0; padding: 3rem 1rem; color: var(--text-secondary);">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--text-muted);">📋</div>
+            <p>No active report. Upload or drop a file to view detailed static diagnostics and AI code audit alerts.</p>
+          </div>
+
+          <div id="report-content" style="display: none;">
+            <!-- Verdict Banner -->
+            <div class="report-header" id="report-verdict-banner">
+              <div>
+                <div class="verdict-title">Scanner Verdict</div>
+                <div class="verdict-status" id="verdict-status-text">Safe</div>
+              </div>
+              <div id="verdict-badge-icon" style="font-size: 2rem;">✓</div>
+            </div>
+
+            <!-- Metadata details -->
+            <div class="metadata-grid">
+              <div class="metadata-item">
+                <span>File Name</span>
+                <strong id="meta-name">-</strong>
+              </div>
+              <div class="metadata-item">
+                <span>File Size</span>
+                <strong id="meta-size">-</strong>
+              </div>
+              <div class="metadata-item">
+                <span>Detected Format</span>
+                <strong id="meta-type">-</strong>
+              </div>
+              <div class="metadata-item">
+                <span>SHA-256 Hash</span>
+                <strong id="meta-hash">-</strong>
+              </div>
+            </div>
+
+            <!-- Threat/Vulnerability Cards list -->
+            <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--text-primary);">Detailed Scan Findings</h3>
+            <div class="issues-container" id="report-issues-list">
+              <!-- Issue cards dynamically populated -->
+            </div>
+            
+            <!-- Audit Source Indicator -->
+            <div id="audit-source-indicator" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 1rem; text-align: right;"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Marketing Copy & SEO details -->
+    <section class="marketing-section">
+      <h2 class="section-title">Universal Static Analysis & AI Auditing</h2>
+      <p class="section-subtitle">A private, secure alternative to cloud-upload virus scanners. Run static heuristics and AI code assessments directly on your device.</p>
+      
+      <!-- Feature highlights -->
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">🛡</div>
+          <h3>Local Privacy First</h3>
+          <p>Files are read into browser memory via HTML5 APIs. No document bytes are ever uploaded to any cloud server, preserving intellectual property.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">⚡</div>
+          <h3>Extension Spoof Checks</h3>
+          <p>Bypass trick extensions. The engine inspects magic header bytes to verify if binary executables (.exe) or scripts are masking as images or docs.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">🤖</div>
+          <h3>Hybrid AI Auditing</h3>
+          <p>Scan code for vulnerabilities using Chrome's local Gemini Nano, cloud API connections, or client-side static heuristic rule-matching.</p>
+        </div>
+      </div>
+
+      <!-- Comparison Table -->
+      <h2 class="section-title" style="font-size: 1.75rem; margin-bottom: 2rem;">How VenScanner Compares</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th><strong>VenScanner</strong></th>
+              <th>Cloud VirusTotal</th>
+              <th>Desktop Antivirus</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Pricing</td>
+              <td><strong>100% Free (no limits)</strong></td>
+              <td>Freemium (Strict quotas)</td>
+              <td>Paid / Subscriptions</td>
+            </tr>
+            <tr>
+              <td>Upload Required?</td>
+              <td><strong>No, files never leave your device</strong></td>
+              <td>Yes (Exposes file contents)</td>
+              <td>No (Local inspection)</td>
+            </tr>
+            <tr>
+              <td>Code Vulnerability Audit?</td>
+              <td><strong>Yes (AI and static patterns)</strong></td>
+              <td>No (Malware signature only)</td>
+              <td>No (Usually targets execution only)</td>
+            </tr>
+            <tr>
+              <td>Offline Capability</td>
+              <td><strong>Yes (runs locally once cached)</strong></td>
+              <td>No (requires active internet)</td>
+              <td>Yes (requires local definitions)</td>
+            </tr>
+            <tr>
+              <td>Installation Required</td>
+              <td><strong>No (runs directly in browser)</strong></td>
+              <td>No (web client)</td>
+              <td>Yes (high system footprint)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- FAQ Container -->
+      <h2 class="section-title" style="font-size: 1.75rem; margin-bottom: 2rem;">Frequently Asked Questions</h2>
+      <div class="faq-container">
+        <div class="faq-item">
+          <div class="faq-question">How does a browser-based scanner detect malware?</div>
+          <div class="faq-answer">VenScanner scans files in three layers. First, it calculates the file's SHA-256 hash locally and queries a secure cloud lookup api to check VirusTotal database reputation. Second, it runs header analyses on binary signatures (like EICAR test scripts) and magic bytes. Third, it audits text files for scripting anomalies.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question">Is it safe to run code files through the AI scanner?</div>
+          <div class="faq-answer">Yes. Because the AI scanner prefers Chrome's built-in <code>window.ai</code> API, all neural-network evaluations happen on your device's graphics card or CPU—completely offline. If you trigger the cloud AI fallback, only the code snippet is sent to a secure, ephemeral Gemini endpoint, and is never used for training.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question">What file formats are supported?</div>
+          <div class="faq-answer">VenScanner accepts all file types up to 100MB. It runs specialized structural and AI parsing on scripting languages (.js, .py, .c, .cpp, .java, .php, etc.) and checks headers on PDF, zip archives, and binaries.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>&copy; 2026 VenScanner. 🔒 100% Client-Side Processing. Optimized for Vercel Deployment.</p>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+  <script>
+    // ==========================================
+    // UI BINDINGS & ORCHESTRATION
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', () => {
+      const dropZone = document.getElementById('drop-zone');
+      const fileInput = document.getElementById('file-input');
+      const consoleOutput = document.getElementById('console-output');
+      const radarArea = document.getElementById('radar-area');
+      const radarStatus = document.getElementById('radar-status');
+      const aiStatusBadge = document.getElementById('ai-status-badge');
+      const aiStatusText = document.getElementById('ai-status-text');
+      
+      const reportEmptyState = document.getElementById('report-empty-state');
+      const reportContent = document.getElementById('report-content');
+      const reportVerdictBanner = document.getElementById('report-verdict-banner');
+      const verdictStatusText = document.getElementById('verdict-status-text');
+      const verdictBadgeIcon = document.getElementById('verdict-badge-icon');
+      const metaName = document.getElementById('meta-name');
+      const metaSize = document.getElementById('meta-size');
+      const metaType = document.getElementById('meta-type');
+      const metaHash = document.getElementById('meta-hash');
+      const reportIssuesList = document.getElementById('report-issues-list');
+      const auditSourceIndicator = document.getElementById('audit-source-indicator');
+
+      // 1. Detect Chrome Local AI Support
+      const localAIAvailable = !!(window.ai && (window.ai.assistant || window.ai.createTextSession));
+      if (localAIAvailable) {
+        aiStatusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
+        aiStatusBadge.style.border = '1px solid rgba(16, 185, 129, 0.2)';
+        aiStatusBadge.querySelector('.chrome-ai-banner-icon').style.color = 'var(--verdict-safe)';
+        aiStatusText.innerText = 'Local AI: Active';
+        aiStatusText.style.color = 'var(--verdict-safe)';
+      } else {
+        aiStatusBadge.style.background = 'rgba(245, 158, 11, 0.08)';
+        aiStatusBadge.style.border = '1px solid rgba(245, 158, 11, 0.2)';
+        aiStatusBadge.querySelector('.chrome-ai-banner-icon').style.color = 'var(--verdict-warn)';
+        aiStatusText.innerText = 'Local AI: Disabled';
+        aiStatusText.style.color = 'var(--verdict-warn)';
+      }
+
+      // 2. Terminal Log Helper
+      function logToConsole(message, type = 'running') {
+        const line = document.createElement('div');
+        line.className = `console-line ${type}`;
+        line.innerText = `[${new Date().toLocaleTimeString()}] ${message}`;
+        consoleOutput.appendChild(line);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+      }
+
+      // 3. Setup Drag and Drop Event Listeners
+      dropZone.addEventListener('click', () => fileInput.click());
+      
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+      });
+      
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+      });
+      
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) {
+          processFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          processFile(e.target.files[0]);
+        }
+      });
+
+      // 4. File Processing Pipeline Coordinator
+      async function processFile(file) {
+        // Reset UI report
+        reportEmptyState.style.display = 'none';
+        reportContent.style.display = 'none';
+        reportIssuesList.innerHTML = '';
+        auditSourceIndicator.innerText = '';
+        
+        // Show scanning state
+        radarArea.classList.add('scanning');
+        radarStatus.innerText = '⚙';
+        consoleOutput.innerHTML = '';
+        logToConsole(`File loaded: "${file.name}" (${formatBytes(file.size)})`, 'success');
+
+        // Execute file scanner engine
+        await FileScannerEngine.scan(file, {
+          onProgress: (statusText) => {
+            logToConsole(statusText, 'running');
+          },
+          onComplete: async (report) => {
+            logToConsole('Local scan completed. Analyzing findings...', 'success');
+            
+            // Check if file is a code file for AI vulnerability auditing
+            const language = getLanguageFromExtension(file.name);
+            let aiIssues = [];
+            let analysisSource = '';
+
+            if (language) {
+              logToConsole(`Code file recognized (${language}). Spawning AI Vulnerability analysis...`, 'warning');
+              
+              await CodeAnalyzerEngine.analyze(file, {
+                onProgress: (aiStatus) => {
+                  logToConsole(aiStatus, 'running');
+                },
+                onComplete: (vulnerabilities, source) => {
+                  aiIssues = vulnerabilities;
+                  analysisSource = source;
+                  logToConsole(`AI Code audit completed using: ${source}`, 'success');
+                },
+                onError: (aiErr) => {
+                  logToConsole(`AI Scan Failed: ${aiErr.message}. Skipping AI metrics.`, 'error');
+                }
+              });
+            } else {
+              logToConsole('Static formats matched. Skipping AI code auditing.', 'running');
+            }
+
+            // Combine issues
+            const combinedIssues = [...report.issues, ...aiIssues];
+            
+            // Re-evaluate final verdict based on all combined issues
+            let finalVerdict = report.verdict;
+            const hasCriticalOrHigh = combinedIssues.some(iss => iss.severity === 'CRITICAL' || iss.severity === 'HIGH');
+            const hasMedium = combinedIssues.some(iss => iss.severity === 'MEDIUM');
+
+            if (hasCriticalOrHigh) {
+              finalVerdict = 'MALICIOUS';
+            } else if (hasMedium && finalVerdict === 'SAFE') {
+              finalVerdict = 'SUSPICIOUS';
+            }
+
+            // Render Report Card
+            renderReportCard(file, report.hash, finalVerdict, combinedIssues, report.reputationScore, analysisSource);
+          },
+          onError: (err) => {
+            logToConsole(`Fatal Scan Error: ${err.message}`, 'error');
+            radarArea.classList.remove('scanning');
+            radarStatus.innerText = '✗';
+            reportEmptyState.style.display = 'block';
+          }
+        });
+      }
+
+      // 5. Render Final Diagnostic Report Card
+      function renderReportCard(file, hash, verdict, issues, reputation, source) {
+        // Stop scanning visuals
+        radarArea.classList.remove('scanning');
+        
+        if (verdict === 'SAFE') {
+          radarStatus.innerText = '✓';
+          radarStatus.style.color = 'var(--verdict-safe)';
+          radarStatus.style.borderColor = 'var(--verdict-safe)';
+          
+          reportVerdictBanner.className = 'report-header SAFE';
+          verdictStatusText.innerText = 'SAFE';
+          verdictBadgeIcon.innerText = '✓';
+          verdictBadgeIcon.style.color = 'var(--verdict-safe)';
+        } else if (verdict === 'SUSPICIOUS') {
+          radarStatus.innerText = '!';
+          radarStatus.style.color = 'var(--verdict-warn)';
+          radarStatus.style.borderColor = 'var(--verdict-warn)';
+          
+          reportVerdictBanner.className = 'report-header SUSPICIOUS';
+          verdictStatusText.innerText = 'SUSPICIOUS';
+          verdictBadgeIcon.innerText = '⚠';
+          verdictBadgeIcon.style.color = 'var(--verdict-warn)';
+        } else {
+          radarStatus.innerText = '✗';
+          radarStatus.style.color = 'var(--verdict-danger)';
+          radarStatus.style.borderColor = 'var(--verdict-danger)';
+          
+          reportVerdictBanner.className = 'report-header MALICIOUS';
+          verdictStatusText.innerText = 'MALICIOUS';
+          verdictBadgeIcon.innerText = '☣';
+          verdictBadgeIcon.style.color = 'var(--verdict-danger)';
+        }
+
+        // Render meta
+        metaName.innerText = file.name;
+        metaSize.innerText = formatBytes(file.size);
+        
+        const ext = file.name.split('.').pop().toLowerCase();
+        const codeLang = getLanguageFromExtension(file.name);
+        metaType.innerText = codeLang ? `${codeLang} Script` : `.${ext.toUpperCase()} File`;
+        
+        metaHash.innerText = hash;
+
+        // Render Issue cards
+        if (issues.length === 0) {
+          reportIssuesList.innerHTML = `
+            <div style="text-align: center; padding: 1.5rem; color: var(--verdict-safe); font-size: 0.9rem;">
+              No threats or code vulnerabilities detected. File appears safe to execute.
+            </div>
+          `;
+        } else {
+          issues.forEach(issue => {
+            const card = document.createElement('div');
+            card.className = `issue-card ${issue.severity}`;
+            
+            let lineText = '';
+            if (issue.line) {
+              lineText = `<span class="issue-line"> - Line ${issue.line}</span>`;
+            }
+
+            let remediationHTML = '';
+            if (issue.remediation) {
+              remediationHTML = `
+                <div class="issue-remediation">
+                  <span class="remediation-label">Remediation Recommendation</span>
+                  <div class="remediation-text">${issue.remediation}</div>
+                </div>
+              `;
+            }
+
+            card.innerHTML = `
+              <div class="issue-meta">
+                <span class="issue-title">${issue.title}${lineText}</span>
+                <span class="issue-severity">${issue.severity}</span>
+              </div>
+              <div class="issue-description">${issue.description}</div>
+              ${remediationHTML}
+            `;
+            
+            reportIssuesList.appendChild(card);
+          });
+        }
+
+        if (source) {
+          auditSourceIndicator.innerText = `Code audited by: ${source}`;
+        }
+
+        // Show report panel
+        reportContent.style.display = 'block';
+        logToConsole(`Report rendered successfully. Final Verdict: ${verdict}`, 'success');
+      }
+    });
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('SW registered: ', registration);
+          })
+          .catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+  </script>
+</body>
+</html>

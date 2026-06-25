@@ -1,0 +1,18 @@
+{
+  "name": "VenScanner",
+  "short_name": "VenScanner",
+  "description": "Local & Cloud-Assisted Malware and AI Code Vulnerability Scanner",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f1d",
+  "theme_color": "#0ea5e9",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

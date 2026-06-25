@@ -1,0 +1,23 @@
+{
+  "name": "venscanner",
+  "version": "1.0.0",
+  "description": "Local and cloud-assisted file scanner for malware and code vulnerabilities",
+  "main": "app.js",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "keywords": [
+    "antivirus",
+    "malware-scanner",
+    "vulnerability-scanner",
+    "local-ai",
+    "gemini",
+    "virustotal",
+    "client-side"
+  ],
+  "author": "VenScanner Team",
+  "license": "MIT",
+  "devDependencies": {
+    "vercel": "^39.0.0"
+  }
+}

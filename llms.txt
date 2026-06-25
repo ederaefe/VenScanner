@@ -1,0 +1,23 @@
+# VenScanner: AI-Readable Web App Summary
+
+VenScanner is a 100% browser-based, privacy-first file security, malware, and AI code vulnerability scanner. It features zero-upload local analysis and cloud-assisted API scanning.
+
+## Core Architecture
+- **Frontend**: Single Page Application built using native HTML5, CSS3, and JavaScript. 
+- **Abstraction Layer**: Core logic is encapsulated in decoupled classes:
+  - `FileScannerEngine`: Manages local SHA-256 generation, magic-byte mismatch checks, EICAR test string signature scans, and delegates reputation checks to `/api/scan-hash`.
+  - `CodeAnalyzerEngine`: Coordinates code vulnerability audits using Chrome's built-in `window.ai` API, Vercel-hosted Gemini API calls via `/api/analyze-code`, and local static heuristic analysis.
+- **Backend**: Vercel Edge/Serverless functions located in the `/api` directory:
+  - `/api/scan-hash`: Submits hashes to the VirusTotal API.
+  - `/api/analyze-code`: Queries the Gemini API for code auditing.
+- **Hosting**: Optimized for deployment on **Vercel** with custom security headers.
+
+## API Contracts
+
+### POST `/api/scan-hash`
+- **Request Body**: `{"hash": "SHA-256 HEX STRING"}`
+- **Response**: Returns a JSON object with threat detection counts, reputation scores, and scanner verdicts from VirusTotal.
+
+### POST `/api/analyze-code`
+- **Request Body**: `{"code": "RAW CODE TEXT", "language": "LANGUAGE EXTENSION"}`
+- **Response**: Returns a JSON array of detected vulnerabilities, including severity, description, line number, and recommended remediation.
